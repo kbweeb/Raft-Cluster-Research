@@ -50,6 +50,21 @@ To deploy the Rust backend to Vercel for free:
 4. **Deploy:** Run `vercel` in your terminal.
 5. **Free Tier Note:** Vercel's free tier is excellent for serverless functions. However, since Raft is a stateful consensus protocol, keep in mind that serverless functions are ephemeral (they shut down when not in use). For a persistent Raft cluster, Render (from Step 1) is recommended, but Vercel is great for the API layer.
 
+### 4. Troubleshooting & AI Agent Prompts
+
+If your dashboard shows **"Backend Offline"**, you can use an AI agent (like Cursor, Claude Code, or Claude Desktop) with the **Render MCP Server** to fix it automatically.
+
+**Copy and paste this prompt to your AI assistant:**
+
+> "I have a Raft Cluster project. Use the Render MCP tool to:
+> 1. Find my 'Raft Backend' web service and my 'Raft Database' Postgres instance.
+> 2. Ensure the Web Service has the correct `DATABASE_URL` from the Postgres instance.
+> 3. Verify the Web Service `PORT` is set to `8080`.
+> 4. Check the latest build logs to ensure the Rust engine started successfully.
+> 5. Give me the public URL of the backend so I can update my Vercel environment variables."
+
+---
+
 ## Rust Backend
 
 The Rust implementation provides a Raft consensus engine with high performance and memory safety.
