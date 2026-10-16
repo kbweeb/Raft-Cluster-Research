@@ -332,16 +332,37 @@ export default function RaftDashboard() {
                 <span className="text-[11px] text-zinc-400">Real-time node state synchronization</span>
               </div>
               
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <AnimatePresence mode="popLayout">
-                  {cluster.nodes.map((node) => (
-                    <NodeCard 
-                      key={node.id} 
-                      node={node} 
-                      onKill={(id) => handleAction(`/api/nodes/${id}/kill`)}
-                      onRevive={(id) => handleAction(`/api/nodes/${id}/revive`)}
-                    />
-                  ))}
+                  {cluster.nodes.length > 0 ? (
+                    cluster.nodes.map((node) => (
+                      <NodeCard 
+                        key={node.id} 
+                        node={node} 
+                        onKill={(id) => handleAction(`/api/nodes/${id}/kill`)}
+                        onRevive={(id) => handleAction(`/api/nodes/${id}/revive`)}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/30">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 mb-4">
+                        <Activity size={24} className={cn(connected && "animate-pulse text-amber-500")} />
+                      </div>
+                      <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                        {connected ? "Initializing Cluster..." : "Backend Connection Required"}
+                      </h3>
+                      <p className="text-xs text-zinc-500 text-center max-w-xs px-4">
+                        {connected 
+                          ? "We've established a connection, waiting for telemetric data from the Raft nodes." 
+                          : "Please ensure your Rust backend is running and the Vercel environment variables are correctly configured."}
+                      </p>
+                      {!connected && (
+                        <div className="mt-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-400 font-mono">
+                          NEXT_PUBLIC_BACKEND_URL: {BACKEND_URL}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </AnimatePresence>
               </div>
             </section>
