@@ -1,0 +1,293 @@
+
+Discarded input sections
+
+ .data          0x00000000        0x0 /tmp/ccPjocwB.o
+ .bss           0x00000000        0x0 /tmp/ccPjocwB.o
+ .data          0x00000000        0x0 /tmp/ccqY3C40.o
+ .bss           0x00000000        0x0 /tmp/ccqY3C40.o
+ .data          0x00000000        0x0 /tmp/cchVizZm.o
+ .data          0x00000000        0x0 /tmp/ccT8E69T.o
+ .bss           0x00000000        0x0 /tmp/ccT8E69T.o
+ .data          0x00000000        0x0 /tmp/ccVUvHlV.o
+ .bss           0x00000000        0x0 /tmp/ccVUvHlV.o
+ .data          0x00000000        0x0 /tmp/cc334d0n.o
+ .bss           0x00000000        0x0 /tmp/cc334d0n.o
+ .data          0x00000000        0x0 /tmp/ccat1gGJ.o
+ .data          0x00000000        0x0 /tmp/ccUeIIuo.o
+ .text          0x00000000        0x0 /tmp/ccvIVKf5.o
+ .data          0x00000000        0x0 /tmp/ccvIVKf5.o
+ .bss           0x00000000        0x0 /tmp/ccvIVKf5.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x00000000         0x00400000         xr
+KERNEL_RAM       0x20000000         0x00010000         xrw
+SHARED_RAM       0x20010000         0x00001000         xrw
+TASK_A_RAM       0x20011000         0x00001000         xrw
+TASK_B_RAM       0x20012000         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD /tmp/ccPjocwB.o
+LOAD /tmp/ccqY3C40.o
+LOAD /tmp/cchVizZm.o
+LOAD /tmp/ccT8E69T.o
+LOAD /tmp/ccVUvHlV.o
+LOAD /tmp/cc334d0n.o
+LOAD /tmp/ccat1gGJ.o
+LOAD /tmp/ccUeIIuo.o
+LOAD /tmp/ccvIVKf5.o
+                0x20010000                        _estack = (ORIGIN (KERNEL_RAM) + LENGTH (KERNEL_RAM))
+
+.vectors        0x00000000       0xc0
+ *(.vectors)
+ .vectors       0x00000000       0xc0 /tmp/ccvIVKf5.o
+
+.text           0x000000c0      0xf32
+ *(.text.Reset_Handler)
+ .text.Reset_Handler
+                0x000000c0       0x6c /tmp/ccvIVKf5.o
+                0x000000c0                Reset_Handler
+ *(.text*)
+ .text          0x0000012c      0x1b0 /tmp/ccPjocwB.o
+                0x000001b0                fault_capture
+ .text          0x000002dc      0x130 /tmp/ccqY3C40.o
+                0x000002ec                ipc_init
+                0x00000308                ipc_send
+                0x00000394                ipc_receive
+ .text          0x0000040c      0x574 /tmp/cchVizZm.o
+                0x00000416                kernel_init
+                0x00000464                task_create
+                0x000005e8                scheduler_select_next
+                0x0000070c                scheduler_yield
+                0x00000724                scheduler_sleep
+                0x0000075c                scheduler_tick
+                0x000007f8                kernel_start
+                0x0000083c                svc_dispatch
+                0x00000904                SVC_Handler
+                0x00000946                PendSV_Handler
+ .text          0x00000980      0x350 /tmp/ccT8E69T.o
+                0x00000c58                main
+ .text          0x00000cd0       0xdc /tmp/ccVUvHlV.o
+                0x00000d18                mpu_init
+                0x00000d70                mpu_switch_task
+ .text          0x00000dac       0x5c /tmp/cc334d0n.o
+                0x00000dac                nvic_enable_irq
+                0x00000dda                nvic_clear_pending_irq
+ .text          0x00000e08       0x74 /tmp/ccat1gGJ.o
+                0x00000e08                systick_init
+                0x00000e4c                systick_now
+                0x00000e60                SysTick_Handler
+ .text          0x00000e7c      0x174 /tmp/ccUeIIuo.o
+                0x00000e7c                uart_init
+                0x00000ed0                uart_putc
+                0x00000f00                uart_puts
+                0x00000f38                uart_getc
+                0x00000f84                UART0_Handler
+ .text.Default_Handler
+                0x00000ff0        0x2 /tmp/ccvIVKf5.o
+                0x00000ff0                DebugMon_Handler
+                0x00000ff0                NMI_Handler
+ *(.glue_7*)
+ .glue_7        0x00000ff2        0x0 linker stubs
+ .glue_7t       0x00000ff2        0x0 linker stubs
+
+.vfp11_veneer   0x00000ff4        0x0
+ .vfp11_veneer  0x00000ff4        0x0 linker stubs
+
+.v4_bx          0x00000ff4        0x0
+ .v4_bx         0x00000ff4        0x0 linker stubs
+
+.iplt           0x00000ff4        0x0
+ .iplt          0x00000ff4        0x0 /tmp/ccPjocwB.o
+
+.rodata         0x00000ff4      0x15b
+ *(.rodata*)
+ .rodata        0x00000ff4       0x87 /tmp/ccPjocwB.o
+ *fill*         0x0000107b        0x1 
+ .rodata        0x0000107c       0xd3 /tmp/ccT8E69T.o
+                0x00001150                        _sidata = LOADADDR (.data)
+
+.rel.dyn        0x00001150        0x0
+ .rel.iplt      0x00001150        0x0 /tmp/ccPjocwB.o
+
+.data           0x20000000        0x0 load address 0x00001150
+                0x20000000                        _sdata = .
+ *(.data*)
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _edata = .
+
+.igot.plt       0x20000000        0x0 load address 0x0000114f
+ .igot.plt      0x20000000        0x0 /tmp/ccPjocwB.o
+
+.bss            0x20000000       0xd8 load address 0x00001150
+                0x20000000                        _sbss = .
+ *(.bss*)
+ .bss           0x20000000       0x48 /tmp/cchVizZm.o
+                0x20000044                g_current
+ .bss           0x20000048        0x4 /tmp/ccat1gGJ.o
+ .bss           0x2000004c       0x88 /tmp/ccUeIIuo.o
+ *(COMMON)
+                0x200000d8                        . = ALIGN (0x8)
+ *fill*         0x200000d4        0x4 
+                0x200000d8                        _ebss = .
+
+.shared         0x20010000      0x120
+                0x20010000                        __shared_start__ = .
+ *(.shared*)
+ .shared        0x20010000      0x108 /tmp/ccqY3C40.o
+                0x20010120                        . = ALIGN (0x20)
+ *fill*         0x20010108       0x18 
+                0x20010120                        __shared_end__ = .
+
+.task_a_ram     0x20011000      0x800
+                0x20011000                        __task_a_ram_start__ = .
+ *(.task_a_ram*)
+ .task_a_ram    0x20011000      0x800 /tmp/ccT8E69T.o
+                0x20011800                        . = ALIGN (0x400)
+                0x20011800                        __task_a_ram_end__ = .
+
+.task_b_ram     0x20012000      0x800
+                0x20012000                        __task_b_ram_start__ = .
+ *(.task_b_ram*)
+ .task_b_ram    0x20012000      0x800 /tmp/ccT8E69T.o
+                0x20012800                        . = ALIGN (0x400)
+                0x20012800                        __task_b_ram_end__ = .
+OUTPUT(build/microkernel.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000     0x1100
+ .debug_info    0x00000000      0x19b /tmp/ccPjocwB.o
+ .debug_info    0x0000019b      0x1d7 /tmp/ccqY3C40.o
+ .debug_info    0x00000372      0x485 /tmp/cchVizZm.o
+ .debug_info    0x000007f7      0x392 /tmp/ccT8E69T.o
+ .debug_info    0x00000b89      0x1e1 /tmp/ccVUvHlV.o
+ .debug_info    0x00000d6a       0xbf /tmp/cc334d0n.o
+ .debug_info    0x00000e29       0xe8 /tmp/ccat1gGJ.o
+ .debug_info    0x00000f11      0x1cc /tmp/ccUeIIuo.o
+ .debug_info    0x000010dd       0x23 /tmp/ccvIVKf5.o
+
+.debug_abbrev   0x00000000      0xa15
+ .debug_abbrev  0x00000000      0x10c /tmp/ccPjocwB.o
+ .debug_abbrev  0x0000010c      0x11a /tmp/ccqY3C40.o
+ .debug_abbrev  0x00000226      0x263 /tmp/cchVizZm.o
+ .debug_abbrev  0x00000489      0x1d1 /tmp/ccT8E69T.o
+ .debug_abbrev  0x0000065a      0x127 /tmp/ccVUvHlV.o
+ .debug_abbrev  0x00000781       0x7f /tmp/cc334d0n.o
+ .debug_abbrev  0x00000800       0xc2 /tmp/ccat1gGJ.o
+ .debug_abbrev  0x000008c2      0x141 /tmp/ccUeIIuo.o
+ .debug_abbrev  0x00000a03       0x12 /tmp/ccvIVKf5.o
+
+.debug_aranges  0x00000000      0x128
+ .debug_aranges
+                0x00000000       0x20 /tmp/ccPjocwB.o
+ .debug_aranges
+                0x00000020       0x20 /tmp/ccqY3C40.o
+ .debug_aranges
+                0x00000040       0x20 /tmp/cchVizZm.o
+ .debug_aranges
+                0x00000060       0x20 /tmp/ccT8E69T.o
+ .debug_aranges
+                0x00000080       0x20 /tmp/ccVUvHlV.o
+ .debug_aranges
+                0x000000a0       0x20 /tmp/cc334d0n.o
+ .debug_aranges
+                0x000000c0       0x20 /tmp/ccat1gGJ.o
+ .debug_aranges
+                0x000000e0       0x20 /tmp/ccUeIIuo.o
+ .debug_aranges
+                0x00000100       0x28 /tmp/ccvIVKf5.o
+
+.debug_line     0x00000000     0x1015
+ .debug_line    0x00000000      0x1c9 /tmp/ccPjocwB.o
+ .debug_line    0x000001c9      0x18b /tmp/ccqY3C40.o
+ .debug_line    0x00000354      0x4b9 /tmp/cchVizZm.o
+ .debug_line    0x0000080d      0x363 /tmp/ccT8E69T.o
+ .debug_line    0x00000b70      0x116 /tmp/ccVUvHlV.o
+ .debug_line    0x00000c86       0x97 /tmp/cc334d0n.o
+ .debug_line    0x00000d1d       0xb9 /tmp/ccat1gGJ.o
+ .debug_line    0x00000dd6      0x1c3 /tmp/ccUeIIuo.o
+ .debug_line    0x00000f99       0x7c /tmp/ccvIVKf5.o
+
+.debug_str      0x00000000      0x4a7
+ .debug_str     0x00000000      0x4a7 /tmp/ccPjocwB.o
+                                0x17a (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/ccqY3C40.o
+                                0x190 (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/cchVizZm.o
+                                0x31f (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/ccT8E69T.o
+                                0x235 (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/ccVUvHlV.o
+                                0x1e9 (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/cc334d0n.o
+                                0x15f (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/ccat1gGJ.o
+                                0x180 (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/ccUeIIuo.o
+                                0x1b1 (size before relaxing)
+ .debug_str     0x000004a7        0x0 /tmp/ccvIVKf5.o
+                                 0x4a (size before relaxing)
+
+.comment        0x00000000       0x26
+ .comment       0x00000000       0x26 /tmp/ccPjocwB.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026        0x0 /tmp/ccqY3C40.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026        0x0 /tmp/cchVizZm.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026        0x0 /tmp/ccT8E69T.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026        0x0 /tmp/ccVUvHlV.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026        0x0 /tmp/cc334d0n.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026        0x0 /tmp/ccat1gGJ.o
+                                 0x27 (size before relaxing)
+ .comment       0x00000026        0x0 /tmp/ccUeIIuo.o
+                                 0x27 (size before relaxing)
+
+.ARM.attributes
+                0x00000000       0x2b
+ .ARM.attributes
+                0x00000000       0x2d /tmp/ccPjocwB.o
+ .ARM.attributes
+                0x0000002d       0x2d /tmp/ccqY3C40.o
+ .ARM.attributes
+                0x0000005a       0x2d /tmp/cchVizZm.o
+ .ARM.attributes
+                0x00000087       0x2d /tmp/ccT8E69T.o
+ .ARM.attributes
+                0x000000b4       0x2d /tmp/ccVUvHlV.o
+ .ARM.attributes
+                0x000000e1       0x2d /tmp/cc334d0n.o
+ .ARM.attributes
+                0x0000010e       0x2d /tmp/ccat1gGJ.o
+ .ARM.attributes
+                0x0000013b       0x2d /tmp/ccUeIIuo.o
+ .ARM.attributes
+                0x00000168       0x21 /tmp/ccvIVKf5.o
+
+.debug_frame    0x00000000      0x5b8
+ .debug_frame   0x00000000       0x78 /tmp/ccPjocwB.o
+ .debug_frame   0x00000078       0x94 /tmp/ccqY3C40.o
+ .debug_frame   0x0000010c      0x160 /tmp/cchVizZm.o
+ .debug_frame   0x0000026c      0x110 /tmp/ccT8E69T.o
+ .debug_frame   0x0000037c       0x98 /tmp/ccVUvHlV.o
+ .debug_frame   0x00000414       0x60 /tmp/cc334d0n.o
+ .debug_frame   0x00000474       0x74 /tmp/ccat1gGJ.o
+ .debug_frame   0x000004e8       0xd0 /tmp/ccUeIIuo.o
+
+.debug_rnglists
+                0x00000000       0x30
+ .debug_rnglists
+                0x00000000       0x17 /tmp/cchVizZm.o
+ .debug_rnglists
+                0x00000017       0x19 /tmp/ccvIVKf5.o
+
+.debug_line_str
+                0x00000000       0x3b
+ .debug_line_str
+                0x00000000       0x3b /tmp/ccvIVKf5.o

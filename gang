@@ -1,0 +1,27 @@
+Fix the layout and visual structure of this Raft/WAL visualizer. Currently, the topology canvas is huge and pushes everything off-screen, and the sections below ("Distributed Write-Ahead Log", "Client Mutation", "Materialized State") are rendering as unstyled vertical text stacked on the left.
+
+Rewrite the main page (`page.tsx`) and container layout with the following constraints:
+
+1. **Dashboard Container & Viewport Fit:**
+   - Use `h-screen flex flex-col bg-zinc-950 text-zinc-100 overflow-hidden` so the entire visualizer fits on one screen without full-page scrolling.
+   - Add a compact top navbar (height ~56px) displaying the title ("Raft Protocol Visualizer"), cluster health badge ("100% HEALTHY"), and WebSocket connection status.
+
+2. **2-Column Responsive Dashboard Body (`flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden`):**
+   - **LEFT / MAIN STAGE (col-span-8 flex flex-col gap-4 overflow-hidden):**
+     - **Top Section: Network Topology View (`h-[360px] bg-zinc-900/50 border border-zinc-800 rounded-xl relative p-4 overflow-hidden`):**
+       - Constrain the SVG canvas explicitly to the container dimensions (`width="100%" height="100%"` with a viewBox like `0 0 800 400`).
+       - Scale down the node circles so all 5 nodes comfortably fit in the viewport with visible connecting lines and status labels.
+     - **Bottom Section: Distributed Write-Ahead Log Strip (`flex-1 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex flex-col overflow-hidden`):**
+       - Show each of the 5 nodes in a compact horizontal row (`flex flex-col gap-2 overflow-y-auto`).
+       - Each node displays its ID and a horizontal scrollable rail (`flex gap-2 overflow-x-auto py-1`) containing discrete log blocks with term, index, command badge, and commit state (green border for committed, amber/dashed for pending).
+
+   - **RIGHT PANEL (col-span-4 flex flex-col gap-4 overflow-y-auto):**
+     - **Card 1: Client Mutation Console (`bg-zinc-900/50 border border-zinc-800 rounded-xl p-4`):**
+       - Dark-themed input fields for `Key` and `Value` (`bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-sm`).
+       - A styled submit button (`bg-amber-500 hover:bg-amber-400 text-zinc-950 font-medium px-4 py-1.5 rounded text-sm`).
+     - **Card 2: Materialized State (`bg-zinc-900/50 border border-zinc-800 rounded-xl p-4`):**
+       - Clean key-value table showing applied entries per node.
+     - **Card 3: Chaos & Partition Controls (`bg-zinc-900/50 border border-zinc-800 rounded-xl p-4`):**
+       - Action buttons to kill/revive nodes and trigger split-brain partitions.
+
+Ensure all parent wrappers use `min-w-0` and `overflow-hidden` where appropriate to prevent flex/grid blowouts, and confirm all Tailwind classes are fully rendered.

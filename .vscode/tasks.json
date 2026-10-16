@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build project",
+            "type": "shell",
+            "command": "make all",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Clean project",
+            "type": "shell",
+            "command": "make clean"
+        },
+        {
+            "label": "Run in QEMU",
+            "type": "shell",
+            "command": "make run"
+        },
+        {
+            "label": "Start QEMU GDB Server",
+            "type": "shell",
+            "command": "make debug",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting QEMU",
+                    "endsPattern": "waiting for GDB"
+                }
+            }
+        }
+    ]
+}
