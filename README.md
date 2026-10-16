@@ -1,16 +1,11 @@
-# Raft Distributed System Visualization
+# Raft Distributed System
 
-This project consists of a Raft consensus engine and a real-time Next.js dashboard. The engine is available in two versions:
-- **TypeScript (Original):** Located in `backend/`
-- **Rust (High Performance):** Located in `backend-rust/`
+This project consists of a Raft consensus engine written in Rust.
 
 ## Deployment Guide
 
 ### 1. Backend Service (Render)
 
-You can deploy either the TypeScript or the Rust version of the backend.
-
-#### Option A: Rust Backend (Recommended)
 1. Create a new **Web Service** on Render.
 2. Connect your repository.
 3. Set **Root Directory** to `backend-rust`.
@@ -19,27 +14,9 @@ You can deploy either the TypeScript or the Rust version of the backend.
    - `PORT`: `8080`
 6. Render will provide a URL like `https://your-rust-backend.onrender.com`.
 
-#### Option B: TypeScript Backend
-1. Create a new **Web Service** on Render.
-2. Connect your repository.
-3. Set **Root Directory** to `backend`.
-4. Set **Environment** to `Docker`.
-5. Render will provide a URL like `https://your-ts-backend.onrender.com`.
+## Rust Backend
 
-### 2. Frontend Dashboard (Vercel)
-
-1. Create a new project on Vercel.
-2. Connect your repository.
-3. Set **Framework Preset**: `Next.js`.
-4. Set **Root Directory**: `frontend`.
-5. Set **Environment Variables**:
-   - `NEXT_PUBLIC_BACKEND_URL`: `https://your-backend-url.onrender.com`
-   - `NEXT_PUBLIC_WS_URL`: `wss://your-backend-url.onrender.com/ws/telemetry` (Use `wss://` for production).
-6. Deploy.
-
-## Rust Backend (Alternative)
-
-The Rust implementation provides the same API and WebSocket telemetry as the TypeScript version but with better performance and memory safety.
+The Rust implementation provides a Raft consensus engine with high performance and memory safety.
 
 ### Building Rust Backend
 1. Ensure you have Rust and a C linker (MSVC or Mingw-w64) installed.
