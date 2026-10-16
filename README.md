@@ -14,7 +14,25 @@ This project consists of a Raft consensus engine written in Rust.
    - `PORT`: `8080`
 6. Render will provide a URL like `https://your-rust-backend.onrender.com`.
 
-### 2. Backend Service (Vercel - Serverless Functions)
+### 2. Frontend Dashboard (Vercel)
+
+To deploy a Next.js frontend to Vercel for free:
+
+1. **Restore/Add Frontend:** Ensure your frontend code (e.g., Next.js) is in a directory (e.g., `frontend/`). *Note: TypeScript components were previously removed to save space; ensure `node_modules` are gitignored.*
+2. **Push to GitHub:** Commit and push your frontend directory.
+3. **Connect to Vercel:**
+   - Log in to [Vercel](https://vercel.com).
+   - Click **"Add New"** > **"Project"**.
+   - Import this GitHub repository.
+4. **Configure Project:**
+   - Set **Framework Preset** to `Next.js`.
+   - Set **Root Directory** to `frontend`.
+5. **Environment Variables:**
+   - `NEXT_PUBLIC_BACKEND_URL`: `https://your-rust-backend.onrender.com`
+   - `NEXT_PUBLIC_WS_URL`: `wss://your-rust-backend.onrender.com/ws/telemetry`
+6. **Deploy:** Click **Deploy**. Vercel will automatically build and host your frontend on their global CDN.
+
+### 3. Backend Service (Vercel - Serverless Functions)
 
 To deploy the Rust backend to Vercel for free:
 
