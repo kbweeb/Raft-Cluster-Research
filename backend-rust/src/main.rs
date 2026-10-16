@@ -15,6 +15,7 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
 use futures_util::{StreamExt, SinkExt};
+use sqlx::postgres::PgPoolOptions;
 
 struct AppState {
     cluster: Arc<Mutex<Cluster>>,
@@ -23,7 +24,38 @@ struct AppState {
 
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().ok();
     let (tx, _) = broadcast::channel(100);
+    
+    // Setup database
+    let database_url = std::env::var("DATABASE_URL").ok();
+    let pool = if let Some(url) = database_url {
+        let p = PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&url)
+            .await
+            .expect("Failed to connect to Postgres");
+            
+        // Initialize tables
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS raft_logs (
+                index BIGINT PRIMARY KEY,
+                term BIGINT NOT NULL,
+                command JSONB NOT NULL,
+                timestamp BIGINT NOT NULL,
+                checksum TEXT NOT NULL
+            )"
+        )
+        .execute(&p)
+        .await
+        .expect("Failed to create raft_logs table");
+        
+        Some(p)
+    } else {
+        println!("DATABASE_URL not set, running in-memory only");
+        None
+    };
+
     let node_ids = vec![
         "Node-1".to_string(),
         "Node-2".to_string(),
@@ -31,7 +63,19 @@ async fn main() {
         "Node-4".to_string(),
         "Node-5".to_string(),
     ];
-    let cluster = Cluster::new(node_ids, tx.clone());
+    let cluster = Cluster::new(node_ids, tx.clone(), pool);
+    
+    // Load state from DB
+    {
+        let c = cluster.lock().unwrap();
+        for node_lock in c.nodes.values() {
+            let mut node = node_lock.lock().unwrap();
+            let _ = node.log.load_from_db().await;
+            // Apply logs to state machine
+            node.apply_to_state_machine();
+        }
+    }
+
     let state = Arc::new(AppState {
         cluster: cluster.clone(),
         tx: tx.clone(),
@@ -44,7 +88,7 @@ async fn main() {
         loop {
             interval.tick().await;
             let mut c = cluster_clone.lock().unwrap();
-            c.process_messages();
+            c.process_messages().await;
         }
     });
 
@@ -73,30 +117,36 @@ async fn main() {
         loop {
             interval.tick().await;
             let now = chrono::Utc::now().timestamp_millis() as u64;
-            let mut c = cluster_clone.lock().unwrap();
             
-            for (id, node_lock) in &c.nodes {
-                let mut node = node_lock.lock().unwrap();
-                if !node.is_alive { continue; }
-                
-                if node.role == NodeRole::LEADER {
-                    let heartbeats = node.send_heartbeats();
-                    for hb in heartbeats {
-                        c.enqueue_message(hb);
-                    }
-                } else {
-                    let timeout = election_timers.get(id).cloned().unwrap_or(0);
-                    if now >= timeout {
-                        let msgs = node.start_election();
-                        for m in msgs {
-                            c.enqueue_message(m);
+            let (to_replicate, to_elect) = {
+                let mut c = cluster_clone.lock().unwrap();
+                let mut replicate_msgs = Vec::new();
+                let mut elect_msgs = Vec::new();
+
+                for (id, node_lock) in &c.nodes {
+                    let mut node = node_lock.lock().unwrap();
+                    if !node.is_alive { continue; }
+                    
+                    if node.role == NodeRole::LEADER {
+                        let heartbeats = node.send_heartbeats();
+                        replicate_msgs.extend(heartbeats);
+                    } else {
+                        let timeout = election_timers.get(id).cloned().unwrap_or(0);
+                        if now >= timeout {
+                            let msgs = node.start_election();
+                            elect_msgs.extend(msgs);
+                            use rand::Rng;
+                            let next_timeout = now + 150 + rand::thread_rng().gen_range(0..150);
+                            election_timers.insert(id.clone(), next_timeout);
                         }
-                        use rand::Rng;
-                        let next_timeout = now + 150 + rand::thread_rng().gen_range(0..150);
-                        election_timers.insert(id.clone(), next_timeout);
                     }
                 }
-            }
+                (replicate_msgs, elect_msgs)
+            };
+
+            let mut c = cluster_clone.lock().unwrap();
+            for m in to_replicate { c.enqueue_message(m); }
+            for m in to_elect { c.enqueue_message(m); }
         }
     });
 
@@ -150,19 +200,23 @@ async fn propose(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<ProposeRequest>,
 ) -> Json<serde_json::Value> {
-    let mut c = state.cluster.lock().unwrap();
-    let leader = c.nodes.values().find(|n| {
-        let node = n.lock().unwrap();
-        node.role == NodeRole::LEADER && node.is_alive
-    });
+    let leader_id = {
+        let c = state.cluster.lock().unwrap();
+        c.nodes.iter().find(|(_, n)| {
+            let node = n.lock().unwrap();
+            node.role == NodeRole::LEADER && node.is_alive
+        }).map(|(id, _)| id.clone())
+    };
 
-    if let Some(leader_lock) = leader {
-        let mut node = leader_lock.lock().unwrap();
+    if let Some(id) = leader_id {
+        let mut c = state.cluster.lock().unwrap();
+        let node_lock = c.nodes.get_mut(&id).unwrap();
+        let mut node = node_lock.lock().unwrap();
         let success = node.propose(Command {
             op: payload.op,
             key: payload.key,
             value: payload.value,
-        });
+        }).await;
         Json(serde_json::json!({ "success": success }))
     } else {
         Json(serde_json::json!({ "success": false, "error": "No active leader" }))

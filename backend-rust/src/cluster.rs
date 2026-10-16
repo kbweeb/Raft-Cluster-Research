@@ -19,6 +19,8 @@ pub struct ClusterDiff {
     pub in_flight: Vec<MessageInFlight>,
 }
 
+use sqlx::PgPool;
+
 pub struct Cluster {
     pub nodes: HashMap<String, Arc<Mutex<RaftNode>>>,
     pub partitions: Vec<Vec<String>>,
@@ -26,14 +28,15 @@ pub struct Cluster {
     pub drop_rate: f64,
     pub message_queue: Vec<(RaftMessage, u64)>,
     pub tx: broadcast::Sender<serde_json::Value>,
+    pub pool: Option<PgPool>,
 }
 
 impl Cluster {
-    pub fn new(node_ids: Vec<String>, tx: broadcast::Sender<serde_json::Value>) -> Arc<Mutex<Self>> {
+    pub fn new(node_ids: Vec<String>, tx: broadcast::Sender<serde_json::Value>, pool: Option<PgPool>) -> Arc<Mutex<Self>> {
         let mut nodes = HashMap::new();
         for id in &node_ids {
             let peers: Vec<String> = node_ids.iter().filter(|&p| p != id).cloned().collect();
-            nodes.insert(id.clone(), Arc::new(Mutex::new(RaftNode::new(id.clone(), peers))));
+            nodes.insert(id.clone(), Arc::new(Mutex::new(RaftNode::new(id.clone(), peers, pool.clone()))));
         }
 
         Arc::new(Mutex::new(Self {
@@ -43,6 +46,7 @@ impl Cluster {
             drop_rate: 0.0,
             message_queue: Vec::new(),
             tx,
+            pool,
         }))
     }
 
@@ -60,7 +64,7 @@ impl Cluster {
         self.message_queue.push((msg, deliver_at));
     }
 
-    pub fn process_messages(&mut self) {
+    pub async fn process_messages(&mut self) {
         let now = chrono::Utc::now().timestamp_millis() as u64;
         let mut to_deliver = Vec::new();
         self.message_queue.retain(|(msg, deliver_at)| {
@@ -75,7 +79,7 @@ impl Cluster {
         for msg in to_deliver {
             if let Some(node_lock) = self.nodes.get(&msg.to) {
                 let mut node = node_lock.lock().unwrap();
-                let responses = node.handle_message(msg);
+                let responses = node.handle_message(msg).await;
                 drop(node);
                 for resp in responses {
                     self.enqueue_message(resp);

@@ -12,7 +12,15 @@ This project consists of a Raft consensus engine written in Rust.
 4. Set **Environment** to `Docker`. (Render will use `backend-rust/Dockerfile`).
 5. Set **Environment Variables**:
    - `PORT`: `8080`
+   - `DATABASE_URL`: `postgres://user:pass@host/db` (Get this from your Render Postgres instance)
 6. Render will provide a URL like `https://your-rust-backend.onrender.com`.
+
+### 2. Database Service (Render - Postgres)
+
+1. Create a new **PostgreSQL** database on Render.
+2. Copy the **Internal Database URL** (or External if you want to test locally).
+3. Paste it into the `DATABASE_URL` env var of your Web Service.
+4. The backend will automatically create the `raft_logs` table on the first boot.
 
 ### 2. Frontend Dashboard (Vercel)
 

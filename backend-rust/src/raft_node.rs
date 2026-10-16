@@ -20,6 +20,8 @@ pub struct RaftMessage {
     pub data: serde_json::Value,
 }
 
+use sqlx::PgPool;
+
 pub struct RaftNode {
     pub id: String,
     pub role: NodeRole,
@@ -35,16 +37,17 @@ pub struct RaftNode {
     pub next_index: HashMap<String, u64>,
     pub match_index: HashMap<String, u64>,
     pub votes: HashSet<String>,
+    pub pool: Option<PgPool>,
 }
 
 impl RaftNode {
-    pub fn new(id: String, peers: Vec<String>) -> Self {
+    pub fn new(id: String, peers: Vec<String>, pool: Option<PgPool>) -> Self {
         Self {
             id,
             role: NodeRole::FOLLOWER,
             current_term: 0,
             voted_for: None,
-            log: Wal::new(),
+            log: Wal::new(pool.clone()),
             commit_index: 0,
             last_applied: 0,
             state_machine: HashMap::new(),
@@ -53,6 +56,7 @@ impl RaftNode {
             next_index: HashMap::new(),
             match_index: HashMap::new(),
             votes: HashSet::new(),
+            pool,
         }
     }
 
@@ -94,7 +98,7 @@ impl RaftNode {
         messages
     }
 
-    pub fn handle_message(&mut self, msg: RaftMessage) -> Vec<RaftMessage> {
+    pub async fn handle_message(&mut self, msg: RaftMessage) -> Vec<RaftMessage> {
         if !self.is_alive { return Vec::new(); }
 
         if msg.term > self.current_term {
@@ -106,7 +110,7 @@ impl RaftNode {
         match msg.msg_type.as_str() {
             "RequestVote" => self.handle_request_vote(msg),
             "RequestVoteResponse" => self.handle_request_vote_response(msg),
-            "AppendEntries" => self.handle_append_entries(msg),
+            "AppendEntries" => self.handle_append_entries(msg).await,
             "AppendEntriesResponse" => self.handle_append_entries_response(msg),
             _ => Vec::new(),
         }
@@ -181,7 +185,7 @@ impl RaftNode {
         messages
     }
 
-    fn handle_append_entries(&mut self, msg: RaftMessage) -> Vec<RaftMessage> {
+    pub async fn handle_append_entries(&mut self, msg: RaftMessage) -> Vec<RaftMessage> {
         if msg.term < self.current_term {
             return vec![RaftMessage {
                 msg_type: "AppendEntriesResponse".to_string(),
@@ -193,15 +197,14 @@ impl RaftNode {
         }
 
         self.role = NodeRole::FOLLOWER;
-        // In the real system, we'd reset the election timer here.
         
         let prev_log_index = msg.data["prevLogIndex"].as_u64().unwrap_or(0);
         let prev_log_term = msg.data["prevLogTerm"].as_u64().unwrap_or(0);
         let entries: Vec<LogEntry> = serde_json::from_value(msg.data["entries"].clone()).unwrap_or_default();
         let leader_commit = msg.data["leaderCommit"].as_u64().unwrap_or(0);
 
-        let prev_entry = self.log.get_entry(prev_log_index);
-        if prev_log_index > 0 && (prev_entry.is_none() || prev_entry.unwrap().term != prev_log_term) {
+        let prev_entry = self.log.entries.iter().find(|e| e.index == prev_log_index as i64);
+        if prev_log_index > 0 && (prev_entry.is_none() || prev_entry.unwrap().term != prev_log_term as i64) {
             return vec![RaftMessage {
                 msg_type: "AppendEntriesResponse".to_string(),
                 from: self.id.clone(),
@@ -212,8 +215,8 @@ impl RaftNode {
         }
 
         if !entries.is_empty() {
-            self.log.truncate(entries[0].index);
-            self.log.append_entries(entries);
+            self.log.truncate(entries[0].index as u64).await;
+            self.log.append_entries(entries).await;
         }
 
         if leader_commit > self.commit_index {
@@ -230,9 +233,9 @@ impl RaftNode {
         }]
     }
 
-    pub fn propose(&mut self, command: Command) -> bool {
+    pub async fn propose(&mut self, command: Command) -> bool {
         if self.role != NodeRole::LEADER || !self.is_alive { return false; }
-        self.log.append(self.current_term, command);
+        self.log.append(self.current_term, command).await;
         true
     }
 
@@ -241,8 +244,8 @@ impl RaftNode {
         let mut messages = Vec::new();
         for peer in &self.peers {
             let next_idx = *self.next_index.get(peer).unwrap_or(&(self.log.get_last_log_index() + 1));
-            let entries: Vec<LogEntry> = self.log.get_entries().into_iter().filter(|e| e.index >= next_idx).collect();
-            let prev_entry = self.log.get_entry(next_idx - 1);
+            let entries: Vec<LogEntry> = self.log.entries.iter().filter(|e| e.index >= next_idx as i64).cloned().collect();
+            let prev_entry = self.log.entries.iter().find(|e| e.index == (next_idx - 1) as i64);
 
             messages.push(RaftMessage {
                 msg_type: "AppendEntries".to_string(),
@@ -296,16 +299,18 @@ impl RaftNode {
     fn apply_to_state_machine(&mut self) {
         while self.last_applied < self.commit_index {
             self.last_applied += 1;
-            if let Some(entry) = self.log.get_entry(self.last_applied) {
-                match entry.command.op.as_str() {
+            let entry = self.log.entries.iter().find(|e| e.index == self.last_applied as i64).cloned();
+            if let Some(e) = entry {
+                let cmd: Command = serde_json::from_value(e.command).unwrap();
+                match cmd.op.as_str() {
                     "SET" => {
-                        if let Some(value) = &entry.command.value {
-                            self.state_machine.insert(entry.command.key.clone(), value.clone());
+                        if let Some(val) = cmd.value {
+                            self.state_machine.insert(cmd.key, val);
                         }
-                    },
+                    }
                     "DELETE" => {
-                        self.state_machine.remove(&entry.command.key);
-                    },
+                        self.state_machine.remove(&cmd.key);
+                    }
                     _ => {}
                 }
             }
